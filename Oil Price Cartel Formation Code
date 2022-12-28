@@ -14,16 +14,17 @@ import sys
 
 ###############################################################################################################################################################################
 
-#We import the raw, unfiltered CSV data file
+#We import the raw, unfiltered CSV data file. This contains oil price and sales data for different regions, for both companies (Schelp and CP) in The Netherlands
 
 def importdata():
     fn = '/Users/markv/Downloads/pyhton/Cartel_data-3.xlsx'
     data = pd.read_excel(fn)
     return data
+    
 
 ###############################################################################################################################################################################
 
-#We can selecte the relevant data we need (local, company, oil price and oil sales)
+#We can select the relevant sales and price data we need based on location, company, and fuel product.
 
 def main():
     ProgramLocation = 'Yes'
@@ -48,9 +49,10 @@ def main():
         selectstatisticsNoLocation(data, companyPrice, companySales, product, company1, company2)
         compareCompanies(data, product, company1, company2)
         
+        
 ###############################################################################################################################################################################      
  
-#This function compares the sales, for any given product (𝐸𝑢𝑟𝑜, 𝑆𝑢𝑝𝑒𝑟 or 𝐷𝑖𝑒𝑠𝑒𝑙), of both the companies, 𝑆𝑐ℎ𝑒𝑙𝑝 and 𝐶𝑃.
+#This function compares the sales for any given product (𝐸𝑢𝑟𝑜, 𝑆𝑢𝑝𝑒𝑟 or 𝐷𝑖𝑒𝑠𝑒𝑙), from both 𝑆𝑐ℎ𝑒𝑙𝑝 and 𝐶𝑃.
         
 def compareCompanies(data, product, company1, company2):
     SalesData = data[['Sales_CP', 'Product', 'Sales_Schelp']]
@@ -61,11 +63,12 @@ def compareCompanies(data, product, company1, company2):
     SalesOneVector = SalesDataGraphData['Sales_CP'].values.reshape(-1,1)
     SalesTwoVector = SalesDataGraphData['Sales_Schelp'].values.reshape(-1,1)
     print(SalesDataGraphData['Sales_CP'].corr(SalesDataGraphData['Sales_Schelp']))
-    plotCompareCompaniesSales(SalesOneVector, SalesTwoVector, product, company1, company2)        
+    plotCompareCompaniesSales(SalesOneVector, SalesTwoVector, product, company1, company2)   
+    
         
 ###############################################################################################################################################################################       
 
-#This functions plots the Sales of  𝑆𝑐ℎ𝑒𝑙𝑝  and  𝐶𝑃  for the chosen product. The sales for company 1 will be projected along the x-axis.
+#This functions plots the Sales of 𝑆𝑐ℎ𝑒𝑙𝑝 and 𝐶𝑃 for the chosen product.
 
 def plotCompareCompaniesSales(SalesOneVector, SalesTwoVector, product, company1, company2):    
     plt.scatter(SalesOneVector, SalesTwoVector, label = 'Diesel Sales', alpha = 0.5)
@@ -74,11 +77,11 @@ def plotCompareCompaniesSales(SalesOneVector, SalesTwoVector, product, company1,
     plt.ylabel(f'Sales Of {product} {company2}')
     plt.legend()
     plt.show()   
+    
 
 ###############################################################################################################################################################################
  
- #This function determines the linear regression model (when location is needed) for the given input and calculates the corresponding coefficient and intercept. 
- #The coefficient and intercept are also printed.
+ #This function determines the linear regression model (when location is needed) for sales against price, and calculates the corresponding regression coefficient and intercept. 
  
  def calculatestatisticsLocation(CompanyDataProductRelevant, companyPrice, companySales, product, company1, company2, location):
     PriceVector = CompanyDataProductRelevant[companyPrice].values.reshape(-1,1)
@@ -89,11 +92,11 @@ def plotCompareCompaniesSales(SalesOneVector, SalesTwoVector, product, company1,
     print('The value of the linear regression intercept: %f' %LinearRegression.intercept_)
     ols(PriceVector, SalesVector, product,company1)
     plotPriceAgainstSalesLocation(PriceVector, SalesVector, SalesPrediction, product, company1, company2, location)
+    
  
  ###############################################################################################################################################################################
 
-#This function determines the linear regression model (when no location is needed) for the given input and calculates the corresponding coefficient and intercept.
-#The coefficient and intercept are also printed.
+#This function determines the linear regression model (when no location is needed) for sales and price, and calculates the corresponding regression coefficient and intercept.
 
 def calculatestatisticsNoLocation(CompanyDataProductRelevant, companyPrice, companySales, product, company1, company2):
     PriceVector = CompanyDataProductRelevant[companyPrice].values.reshape(-1,1)
@@ -108,7 +111,7 @@ def calculatestatisticsNoLocation(CompanyDataProductRelevant, companyPrice, comp
 
 ###############################################################################################################################################################################
 
-#This function uses a tool which can be used to calculate several statistics about a linear regression model.
+#This function implements OLS (Ordinary Least Squares) which can be used to calculate several statistics about the linear regression model.
 #We use it to determine a best linear unbiased estimator of  𝛽𝑜  and  𝛽1 .
 
 def ols(pv, sv, product, company1):
@@ -144,7 +147,6 @@ def ols(pv, sv, product, company1):
 
 ###############################################################################################################################################################################
 
-
 def plotPriceAgainstSalesLocation(pv, sv, dsp, product, company1, company2, location):
     plt.scatter(pv, sv, label = 'Sales vs Price', alpha = 0.5)
     plt.plot(pv, dsp, color = 'red', label = 'OLS Analysis')
@@ -159,11 +161,8 @@ def plotPriceAgainstSalesLocation(pv, sv, dsp, product, company1, company2, loca
 
 ###############################################################################################################################################################################
  
- #This function, used when no location is needed, selects a specific part of all data. 
- #We are only interested in making a selection based on the product, the price and sales of the product. 
- #The function also prints an array that contains information about the price and sales of a company for one product.
- 
- 
+ #This function is used when no location is needed and selects data based on product, price and sales.
+
  def selectstatisticsNoLocation(data, companyPrice, companySales, product, company1, company2):
     CompanyData = data[[companyPrice, companySales, 'Product']]
     CompanyDataProduct = CompanyData[CompanyData.Product == product]
@@ -171,12 +170,10 @@ def plotPriceAgainstSalesLocation(pv, sv, dsp, product, company1, company2, loca
     print(CompanyDataProductRelevant)
     calculatestatisticsNoLocation(CompanyDataProductRelevant, companyPrice, companySales, product, company1, company2)
     
+    
 ###############################################################################################################################################################################
   
-  #This function, used when a location is needed, selects a specific part of all data. 
-  #We are only interested in making a selection based on the product, the price and sales of the product. 
-  #The function also prints an array that contains information about the price and sales of a company for one product.
-  
+  #This function is used when a location is needed and selects data based on product, price and sales. 
   
   def selectstatisticsLocation(data, companyPrice, companySales, product, company1, company2, location):
     CompanyData = data[['Municipality', companyPrice, companySales, 'Product']]
@@ -201,17 +198,12 @@ def main():
     regressionBetaOneHatCoefficient = -6.388e+04
     regressionBetaIntercept = 1.457e+05
     betaGammaRatio = 0.18 
-    # Code
     regression(regressionBetaOneHatCoefficient, regressionBetaIntercept, betaGammaRatio)
     
-###########################################################
-### call main
-if __name__ == "__main__":
-    main()
 
 ###############################################################################################################################################################################
 
-#This function uses the  𝛽̂ 1 ,  𝛽0 ,  𝛽𝛾  as input to calculate the adjusted Gamma, final Gamma Value and final Beta Value
+#This function uses the  𝛽̂ 1 ,  𝛽0 ,  𝛽𝛾 from PART A as input to calculate the adjusted Gamma, final Gamma Value and final Beta Value
 
 def regression(regressionBetaOneHatCoefficient, regressionBetaIntercept, betaGammaRatio):
     adjustedGamma = betaGammaRatio - 1
@@ -226,11 +218,8 @@ def regression(regressionBetaOneHatCoefficient, regressionBetaIntercept, betaGam
 
 ###############################################################################################################################################################################
 
-#All the data is split in multiple datasets, where data for one week is examined per week seperated through a for loop. 
-#Secondly, the function calls several functions to obtain all the information required later in the function. 
-#Lastly, a graph is plotted and another function is called where the important results are printed. 
-#The graph compares the monopoly, cartel, market leader and market follower prices for all weeks.
-
+#Firstly, we calculate many different outputs for both Schelp and CP. 
+#Secondly, we end up with a dataframe and output plot displaying stakelberg, monopoly, and cartel prices for each fuel product
 
 def calculateValues(excelRead, companySales1, companySales2, product, company1, company2, alpha1, beta1, gamma1, alpha2, beta2, gamma2, alphaTotal, betaTotal, gammaTotal, companyProfit1, companyProfit2, companyPrices1, companyPrices2):
     excelReadWeek = excelRead[excelRead.Week == 1] 
@@ -367,7 +356,7 @@ def printData(companySales1, companySales2, companyPrices1, companyPrices2, comp
     
 ###############################################################################################################################################################################
 
-#The stakelbergPriceOne function represents the best price response strategy of the market leader  𝑆1(𝑃2)  in response to the followers best strategy response  𝑆2(𝑃1)
+#The stakelbergPriceOne function represents the best price response strategy of the market leader 𝑆1(𝑃2) in response to the followers best strategy response 𝑆2(𝑃1)
 
 def stackelbergPriceOne(alpha1, alpha2, beta1, beta2, gamma1, gamma2, marginalCostCp):
     priceOne = ((-2*alpha1*gamma2)-(beta1*(alpha2+(marginalCostCp*gamma2))))/(2*(((beta1*beta2))-(2*gamma1*gamma2))) + marginalCostCp/2
@@ -392,7 +381,7 @@ def calculateAverageWeeklyBrentCost(excelReadWeek, product):
     
 ###############################################################################################################################################################################
 
-#This function uses the value  𝑐𝑜𝑛𝑠𝑡𝑎𝑛𝑡  and  𝐵𝑟𝑒𝑛𝑡𝑂𝑖𝑙  to calculate and return the  𝑚𝑎𝑟𝑔𝑖𝑛𝑎𝑙   𝑐𝑜𝑠𝑡 .
+#This function uses the value 𝑐𝑜𝑛𝑠𝑡𝑎𝑛𝑡 and 𝐵𝑟𝑒𝑛𝑡𝑂𝑖𝑙 to calculate and return the 𝑚𝑎𝑟𝑔𝑖𝑛𝑎𝑙 𝑐𝑜𝑠𝑡 .
 
 def calculateMarginalCostCompany(constantCompany, brentOilAverageWeeklyProduct):
     marginalCost = constantCompany*brentOilAverageWeeklyProduct /159
@@ -407,7 +396,7 @@ def calculateConstantCompany(averageFuelSalesCompany, averageFuelPricesCompany, 
     
 ###############################################################################################################################################################################
 
-#This function uses the values for  𝑎𝑙𝑝ℎ𝑎,𝑏𝑒𝑡𝑎,𝑔𝑎𝑚𝑚𝑎  and  𝑚𝑎𝑟𝑔𝑖𝑛𝑎𝑙𝑐𝑜𝑠𝑡  to calculate and return the  𝑚𝑜𝑛𝑜𝑝𝑜𝑙𝑦   𝑝𝑟𝑖𝑐𝑒
+#This function uses the values for 𝑎𝑙𝑝ℎ𝑎, 𝑏𝑒𝑡𝑎, 𝑔𝑎𝑚𝑚𝑎 and 𝑚𝑎𝑟𝑔𝑖𝑛𝑎𝑙𝑐𝑜𝑠𝑡 to calculate and return the 𝑚𝑜𝑛𝑜𝑝𝑜𝑙𝑦 𝑝𝑟𝑖𝑐𝑒
 
 def calculateMonopolyPrice(alphaTotal, betaTotal, gammaTotal, marginalCost):
     monopolyPrice = (marginalCost*(betaTotal-gammaTotal)-alphaTotal) / (2*(betaTotal-gammaTotal))
@@ -415,7 +404,7 @@ def calculateMonopolyPrice(alphaTotal, betaTotal, gammaTotal, marginalCost):
 
 ###############################################################################################################################################################################
 
-#This function uses the values for  𝑎𝑙𝑝ℎ𝑎,𝑏𝑒𝑡𝑎,𝑔𝑎𝑚𝑚𝑎,𝑚𝑎𝑟𝑔𝑖𝑛𝑎𝑙𝑐𝑜𝑠𝑡  and  𝑝𝑟𝑖𝑐𝑒  to calculate and return the  𝑝𝑟𝑜𝑓𝑖𝑡
+#This function uses the values for 𝑎𝑙𝑝ℎ𝑎, 𝑏𝑒𝑡𝑎, 𝑔𝑎𝑚𝑚𝑎, 𝑚𝑎𝑟𝑔𝑖𝑛𝑎𝑙𝑐𝑜𝑠𝑡 and 𝑝𝑟𝑖𝑐𝑒 to calculate and return the  𝑝𝑟𝑜𝑓𝑖𝑡
 
 def calculateProfit(alphaTotal, betaTotal, gammaTotal, marginalCost, price):
     profit = ((price-marginalCost)*(alphaTotal+(betaTotal-gammaTotal)*price))
@@ -423,8 +412,8 @@ def calculateProfit(alphaTotal, betaTotal, gammaTotal, marginalCost, price):
     
 ###############################################################################################################################################################################
 
-#This function uses the values for  𝑎𝑙𝑝ℎ𝑎,𝑏𝑒𝑡𝑎,𝑔𝑎𝑚𝑚𝑎,𝑚𝑎𝑟𝑔𝑖𝑛𝑎𝑙𝑐𝑜𝑠𝑡  and  𝑝𝑟𝑜𝑓𝑖𝑡  together with the detection probability ( 0.25 ) and fine ratio ( 0.14 ) to calculate the  𝑐𝑎𝑟𝑡𝑒𝑙   𝑝𝑟𝑖𝑐𝑒 .  
-#𝐶𝑎𝑟𝑡𝑒𝑙   𝑝𝑟𝑖𝑐𝑒  represents what the price would be taking into account the detection probability and the fine ratio.
+#This function uses the values for 𝑎𝑙𝑝ℎ𝑎, 𝑏𝑒𝑡𝑎, 𝑔𝑎𝑚𝑚𝑎, 𝑚𝑎𝑟𝑔𝑖𝑛𝑎𝑙𝑐𝑜𝑠𝑡 and 𝑝𝑟𝑜𝑓𝑖𝑡 together with the detection probability ( 0.25 ) and fine ratio ( 0.14 ) to calculate the 𝑐𝑎𝑟𝑡𝑒𝑙 𝑝𝑟𝑖𝑐𝑒 .  
+#𝐶𝑎𝑟𝑡𝑒𝑙 𝑝𝑟𝑖𝑐𝑒 represents what the price would be taking into account the detection probability and the fine ratio.
 
 def calculateCartelPrice(alphaTotal, betaTotal, gammaTotal, marginalCost, profit): ##mc schelp, but when calling the function is say cp
     cartelPrice = ((0.25*0.14*profit) + (marginalCost*(betaTotal-gammaTotal)) - alphaTotal) / (2*(betaTotal-gammaTotal))
@@ -432,7 +421,7 @@ def calculateCartelPrice(alphaTotal, betaTotal, gammaTotal, marginalCost, profit
     
 ###############################################################################################################################################################################
 
-#This function selects and returns two string variables with each containing all data about the prices for the companies  𝑆𝑐ℎ𝑒𝑙𝑝  and  𝐶𝑃  for a specified product within the current week.
+#This function selects and returns two string variables with each containing all data about the prices for the companies 𝑆𝑐ℎ𝑒𝑙𝑝 and 𝐶𝑃 for a specified product within the current week.
 
 def selectPrices(excelReadWeek, product, companyPrices1, companyPrices2):
     dataPricesSchelp = excelReadWeek[['Product', companyPrices1]]
@@ -442,8 +431,6 @@ def selectPrices(excelReadWeek, product, companyPrices1, companyPrices2):
     return dataPricesFinalCp, dataPricesFinalSchelp
     
 ############################################################################################################################################################################### 
-
-#This function selects and returns two string variables with each containing all data about the profits for the companies  𝑆𝑐ℎ𝑒𝑙𝑝  and  𝐶𝑃  for a specified product within the current week.
 
 def selectProfits(excelReadWeek, product, companyProfit1, companyProfit2):
     dataProfitSchelp = excelReadWeek[['Product', companyProfit1]]
