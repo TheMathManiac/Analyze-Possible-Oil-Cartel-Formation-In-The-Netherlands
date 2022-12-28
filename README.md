@@ -1,4 +1,4 @@
-## What Is The Analyze-Possible-Oil-Cartel-Formation-In-The-Netherlands Project?
+## What Is The 'Analyze-Possible-Oil-Cartel-Formation-In-The-Netherlands' Project?
 
 * Analyze price and sales relationships of oil for two companies: Schelp and CP in general across The Netherlands.
 * Analyze price and sales relationships of oil for two companies: Schelp and CP in different locations across The Netherlands.
