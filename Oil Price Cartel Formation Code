@@ -225,3 +225,316 @@ def regression(regressionBetaOneHatCoefficient, regressionBetaIntercept, betaGam
 (PART C)
 
 ###############################################################################################################################################################################
+
+#All the data is split in multiple datasets, where data for one week is examined per week seperated through a for loop. 
+#Secondly, the function calls several functions to obtain all the information required later in the function. 
+#Lastly, a graph is plotted and another function is called where the important results are printed. 
+#The graph compares the monopoly, cartel, market leader and market follower prices for all weeks.
+
+
+def calculateValues(excelRead, companySales1, companySales2, product, company1, company2, alpha1, beta1, gamma1, alpha2, beta2, gamma2, alphaTotal, betaTotal, gammaTotal, companyProfit1, companyProfit2, companyPrices1, companyPrices2):
+    excelReadWeek = excelRead[excelRead.Week == 1] 
+    
+    brentOilAverageWeeklyProduct = calculateAverageWeeklyBrentCost(excelReadWeek, product)
+    dataSalesFinalCp, dataSalesFinalSchelp = selectSales(excelReadWeek, companySales1, companySales2, product)
+    dataProfitFinalSchelp, dataProfitFinalCp = selectProfits(excelReadWeek, product, companyProfit1, companyProfit2)
+    dataFuelPricesFinalCp, dataFuelPricesFinalSchelp = selectPrices(excelReadWeek, product, companyPrices1, companyPrices2)
+       
+    averageProfitSchelp = calculateAverageProfitsCompany(dataProfitFinalSchelp, companyProfit1)
+    averageProfitCp = calculateAverageProfitsCompany(dataProfitFinalCp, companyProfit2)
+       
+    averageFuelSalesSchelp = calculateAverageSales(dataSalesFinalSchelp, companySales1)       
+    averageFuelSalesCp = calculateAverageSales(dataSalesFinalCp, companySales2) 
+    
+    averageFuelPricesCp = calculateAveragePricesCompany(dataFuelPricesFinalCp, companyPrices2)
+    averageFuelPricesSchelp = calculateAveragePricesCompany(dataFuelPricesFinalSchelp, companyPrices1)
+       
+    averageRevenuesCp = calculateAverageRevenueCompany(averageFuelSalesCp, averageFuelPricesCp)
+    averageRevenuesSchelp = calculateAverageRevenueCompany(averageFuelSalesSchelp, averageFuelPricesSchelp)
+       
+    numberOfBarrelsSchelp = calculateNumberOfOilBarrels(averageFuelSalesSchelp)
+    numberOfBarrelsCp = calculateNumberOfOilBarrels(averageFuelSalesCp)
+     
+    constantSchelp = calculateConstantCompany(averageFuelSalesSchelp, averageFuelPricesSchelp, averageProfitSchelp, brentOilAverageWeeklyProduct)
+    constantCp = calculateConstantCompany(averageFuelSalesCp, averageFuelPricesCp, averageProfitCp, brentOilAverageWeeklyProduct)   
+     
+    marginalCostSchelp = calculateMarginalCostCompany(constantSchelp, brentOilAverageWeeklyProduct)
+    marginalCostCp = calculateMarginalCostCompany(constantCp, brentOilAverageWeeklyProduct)
+   
+    monopolyPrice = calculateMonopolyPrice(alphaTotal, betaTotal, gammaTotal, marginalCostCp)
+    profit = calculateProfit(alphaTotal, betaTotal, gammaTotal, marginalCostCp, monopolyPrice)
+       
+    priceOneCp = stackelbergPriceOne(alpha1, alpha2, beta1, beta2, gamma1, gamma2, marginalCostCp)
+    priceTwoSchelp = stackelbergPriceTwo(alpha1, beta1, gamma1, marginalCostCp, priceOneCp)
+       
+    dataframe1 = pd.DataFrame()
+    stackelbergprices = []
+    stackelbergprices.append([priceTwoSchelp, priceOneCp, monopolyPrice, monopolyPrice])
+    
+    dataframe2 = pd.DataFrame()
+    averageprofits = []
+    averageprofits.append([averageProfitCp, averageProfitSchelp])
+    
+    print("\n The results for week:", 1)
+    printData(companySales1, companySales2, companyPrices1, companyPrices2, company1, company2, product, averageFuelSalesSchelp, averageFuelSalesCp, averageFuelPricesSchelp, averageFuelPricesCp, numberOfBarrelsSchelp, numberOfBarrelsCp, brentOilAverageWeeklyProduct, monopolyPrice, constantSchelp, constantCp)
+
+
+    for i in range(2, 51):
+        if i == 29:
+            continue
+        excelReadWeek = excelRead[excelRead.Week == i] 
+        brentOilAverageWeeklyProduct = calculateAverageWeeklyBrentCost(excelReadWeek, product)
+       
+        dataSalesFinalCp, dataSalesFinalSchelp = selectSales(excelReadWeek, companySales1, companySales2, product)
+        dataProfitFinalSchelp, dataProfitFinalCp = selectProfits(excelReadWeek, product, companyProfit1, companyProfit2)
+        dataFuelPricesFinalCp, dataFuelPricesFinalSchelp = selectPrices(excelReadWeek, product, companyPrices1, companyPrices2)
+       
+        averageProfitSchelp = calculateAverageProfitsCompany(dataProfitFinalSchelp, companyProfit1)
+        averageProfitCp = calculateAverageProfitsCompany(dataProfitFinalCp, companyProfit2)
+       
+        averageFuelSalesSchelp = calculateAverageSales(dataSalesFinalSchelp, companySales1)       
+        averageFuelSalesCp = calculateAverageSales(dataSalesFinalCp, companySales2)
+       
+        averageFuelPricesCp = calculateAveragePricesCompany(dataFuelPricesFinalCp, companyPrices2)
+        averageFuelPricesSchelp = calculateAveragePricesCompany(dataFuelPricesFinalSchelp, companyPrices1)
+       
+        numberOfBarrelsSchelp = calculateNumberOfOilBarrels(averageFuelSalesSchelp)
+        numberOfBarrelsCp = calculateNumberOfOilBarrels(averageFuelSalesCp)
+       
+        constantSchelp = calculateConstantCompany(averageFuelSalesSchelp, averageFuelPricesSchelp, averageProfitSchelp, brentOilAverageWeeklyProduct)
+        constantCp = calculateConstantCompany(averageFuelSalesCp, averageFuelPricesCp, averageProfitCp, brentOilAverageWeeklyProduct)
+       
+        marginalCostSchelp = calculateMarginalCostCompany(constantSchelp, brentOilAverageWeeklyProduct)
+        marginalCostCp = calculateMarginalCostCompany(constantCp, brentOilAverageWeeklyProduct)
+          
+        cartelprice = calculateCartelPrice(alphaTotal, betaTotal, gammaTotal, marginalCostCp, profit)
+        profit = calculateProfit(alphaTotal, betaTotal, gammaTotal, marginalCostCp, cartelprice)
+        monopolyPrice = calculateMonopolyPrice(alphaTotal, betaTotal, gammaTotal, marginalCostSchelp)
+
+        priceOneCp = stackelbergPriceOne(alpha1, alpha2, beta1, beta2, gamma1, gamma2, marginalCostCp)
+        priceTwoSchelp = stackelbergPriceTwo(alpha1, beta1, gamma1, marginalCostCp, priceOneCp)
+        stackelbergprices.append([priceTwoSchelp, priceOneCp, monopolyPrice, cartelprice])
+        
+        dataframe1 = pd.DataFrame(stackelbergprices, columns=[f'Stackelberg Price Schelp ({product})', f'Stackelberg price CP ({product})', f'Monopoly price of ({product})', f'Cartel price of ({product})'])
+
+        averageprofits.append([averageProfitCp, averageProfitSchelp])
+        dataframe2 = pd.DataFrame(averageprofits,columns=[f'Average Total {product} profits CP', f'Average Total {product} profits Schelp'])
+        meanProfitCP = dataframe2[f'Average Total {product} profits CP'].mean()
+        meanProfitSchelp = dataframe2[f'Average Total {product} profits Schelp' ].mean() 
+       
+        print("\n The results for week:", i)
+        printData(companySales1, companySales2, companyPrices1, companyPrices2, company1, company2, product, averageFuelSalesSchelp, averageFuelSalesCp, averageFuelPricesSchelp, averageFuelPricesCp, numberOfBarrelsSchelp, numberOfBarrelsCp, brentOilAverageWeeklyProduct, monopolyPrice, constantSchelp, constantCp)
+        
+    
+    dataframe1.index += 1
+    print(dataframe1)
+    
+    print(f"The mean {product} profits for CP are:", meanProfitCP)
+    print(f"The mean {product} profits for Schelp are: ", meanProfitSchelp)
+ 
+    dataframe1[[f'Stackelberg Price Schelp ({product})', f'Stackelberg price CP ({product})', f'Monopoly price of ({product})', f'Cartel price of ({product})']].plot()
+   
+    plt.xlabel('Week Number')
+    plt.ylabel(f'Price of {product}')
+    plt.title(f'The price set for {product} over 50 weeks')
+    plt.show()
+    
+    
+###############################################################################################################################################################################
+
+def printData(companySales1, companySales2, companyPrices1, companyPrices2, company1, company2, product, averageFuelSalesSchelp, averageFuelSalesCp, averageFuelPricesSchelp, averageFuelPricesCp, numberOfBarrelsSchelp, numberOfBarrelsCp, brentOilAverageWeeklyProduct, monopolyPrice, constantSchelp, constantCp):
+    print(f"The average weekly {companySales1} for {product} is: ", averageFuelSalesSchelp)
+    print(f"The average weekly {companySales2} for {product} is: ", averageFuelSalesCp)
+    print("**********")
+       
+    print(f"The average weekly {companyPrices1} for {company1} for {product} is: ", averageFuelPricesSchelp)
+    print(f"The average weekly {companyPrices2} for {company2} for {product} is: ", averageFuelPricesCp)
+    print("**********")
+        
+    print(f"The average number of barrels delivered for {company1} of {product} is: ", numberOfBarrelsSchelp)
+    print(f"The average number of barrels delivered for {company2} of {product} is: ", numberOfBarrelsCp)
+    print("**********")
+      
+    print(f"The average weekly brent oil price for {product} is: ", brentOilAverageWeeklyProduct)
+    print("**********")
+         
+    print(f"The monopoly price for {product}: ", monopolyPrice)
+    print("***********")
+           
+    print(f"The constant for {product} for Schelp is:", constantSchelp)
+    print(f"The constant for {product} for CP is:", constantCp)
+    print("***********")
+    
+###############################################################################################################################################################################
+
+#The stakelbergPriceOne function represents the best price response strategy of the market leader  𝑆1(𝑃2)  in response to the followers best strategy response  𝑆2(𝑃1)
+
+def stackelbergPriceOne(alpha1, alpha2, beta1, beta2, gamma1, gamma2, marginalCostCp):
+    priceOne = ((-2*alpha1*gamma2)-(beta1*(alpha2+(marginalCostCp*gamma2))))/(2*(((beta1*beta2))-(2*gamma1*gamma2))) + marginalCostCp/2
+    stackelbergPriceTwo(alpha1, beta1, gamma1, marginalCostCp, priceOne)
+    return priceOne
+    
+###############################################################################################################################################################################
+
+#The stakelbergPriceTwo function represents the best price response strategy $S_{2}(P_{1})$ of the follower to the initial price set by the market leader.
+
+def stackelbergPriceTwo(alpha2, beta2, gamma2, marginalCost, priceOne):
+    priceTwo = ((alpha2 + beta2*priceOne + marginalCost*gamma2) / (2*gamma2))
+    return priceTwo
+    
+###############################################################################################################################################################################    
+    
+def calculateAverageWeeklyBrentCost(excelReadWeek, product):
+    dataBrentOilProduct = excelReadWeek[excelReadWeek.Product == product]
+    dataBrentOilProductWeekly = dataBrentOilProduct[['Week', 'Brent oil price (€)']]
+    brentOilAverageWeeklyProduct = dataBrentOilProductWeekly['Brent oil price (€)'].mean()
+    return brentOilAverageWeeklyProduct  
+    
+###############################################################################################################################################################################
+
+#This function uses the value  𝑐𝑜𝑛𝑠𝑡𝑎𝑛𝑡  and  𝐵𝑟𝑒𝑛𝑡𝑂𝑖𝑙  to calculate and return the  𝑚𝑎𝑟𝑔𝑖𝑛𝑎𝑙   𝑐𝑜𝑠𝑡 .
+
+def calculateMarginalCostCompany(constantCompany, brentOilAverageWeeklyProduct):
+    marginalCost = constantCompany*brentOilAverageWeeklyProduct /159
+    return marginalCost
+    
+############################################################################################################################################################################### 
+
+def calculateConstantCompany(averageFuelSalesCompany, averageFuelPricesCompany, averageProfitCompany, brentOilAverageWeeklyProduct):
+    constant = (((averageFuelPricesCompany*averageFuelSalesCompany) - averageProfitCompany) / averageFuelSalesCompany)*159
+    finalConstant = round(constant / brentOilAverageWeeklyProduct, 1)
+    return finalConstant
+    
+###############################################################################################################################################################################
+
+#This function uses the values for  𝑎𝑙𝑝ℎ𝑎,𝑏𝑒𝑡𝑎,𝑔𝑎𝑚𝑚𝑎  and  𝑚𝑎𝑟𝑔𝑖𝑛𝑎𝑙𝑐𝑜𝑠𝑡  to calculate and return the  𝑚𝑜𝑛𝑜𝑝𝑜𝑙𝑦   𝑝𝑟𝑖𝑐𝑒
+
+def calculateMonopolyPrice(alphaTotal, betaTotal, gammaTotal, marginalCost):
+    monopolyPrice = (marginalCost*(betaTotal-gammaTotal)-alphaTotal) / (2*(betaTotal-gammaTotal))
+    return monopolyPrice
+
+###############################################################################################################################################################################
+
+#This function uses the values for  𝑎𝑙𝑝ℎ𝑎,𝑏𝑒𝑡𝑎,𝑔𝑎𝑚𝑚𝑎,𝑚𝑎𝑟𝑔𝑖𝑛𝑎𝑙𝑐𝑜𝑠𝑡  and  𝑝𝑟𝑖𝑐𝑒  to calculate and return the  𝑝𝑟𝑜𝑓𝑖𝑡
+
+def calculateProfit(alphaTotal, betaTotal, gammaTotal, marginalCost, price):
+    profit = ((price-marginalCost)*(alphaTotal+(betaTotal-gammaTotal)*price))
+    return profit
+    
+###############################################################################################################################################################################
+
+#This function uses the values for  𝑎𝑙𝑝ℎ𝑎,𝑏𝑒𝑡𝑎,𝑔𝑎𝑚𝑚𝑎,𝑚𝑎𝑟𝑔𝑖𝑛𝑎𝑙𝑐𝑜𝑠𝑡  and  𝑝𝑟𝑜𝑓𝑖𝑡  together with the detection probability ( 0.25 ) and fine ratio ( 0.14 ) to calculate the  𝑐𝑎𝑟𝑡𝑒𝑙   𝑝𝑟𝑖𝑐𝑒 .  
+#𝐶𝑎𝑟𝑡𝑒𝑙   𝑝𝑟𝑖𝑐𝑒  represents what the price would be taking into account the detection probability and the fine ratio.
+
+def calculateCartelPrice(alphaTotal, betaTotal, gammaTotal, marginalCost, profit): ##mc schelp, but when calling the function is say cp
+    cartelPrice = ((0.25*0.14*profit) + (marginalCost*(betaTotal-gammaTotal)) - alphaTotal) / (2*(betaTotal-gammaTotal))
+    return cartelPrice  
+    
+###############################################################################################################################################################################
+
+#This function selects and returns two string variables with each containing all data about the prices for the companies  𝑆𝑐ℎ𝑒𝑙𝑝  and  𝐶𝑃  for a specified product within the current week.
+
+def selectPrices(excelReadWeek, product, companyPrices1, companyPrices2):
+    dataPricesSchelp = excelReadWeek[['Product', companyPrices1]]
+    dataPricesCp = excelReadWeek[['Product', companyPrices2]]
+    dataPricesFinalSchelp = dataPricesSchelp[dataPricesSchelp.Product == product]       
+    dataPricesFinalCp = dataPricesCp[dataPricesCp.Product == product]
+    return dataPricesFinalCp, dataPricesFinalSchelp
+    
+############################################################################################################################################################################### 
+
+#This function selects and returns two string variables with each containing all data about the profits for the companies  𝑆𝑐ℎ𝑒𝑙𝑝  and  𝐶𝑃  for a specified product within the current week.
+
+def selectProfits(excelReadWeek, product, companyProfit1, companyProfit2):
+    dataProfitSchelp = excelReadWeek[['Product', companyProfit1]]
+    dataProfitCp = excelReadWeek[['Product', companyProfit2]]  
+    dataProfitFinalSchelp = dataProfitSchelp[dataProfitSchelp.Product == product]
+    dataProfitFinalCp = dataProfitCp[dataProfitCp.Product == product]
+    return dataProfitFinalSchelp, dataProfitFinalCp
+    
+###############################################################################################################################################################################    
+
+def calculateAverageRevenueCompany(dataSalesCompany, dataPricesFinalCompany):
+    averageRevenueCompany = dataSalesCompany*dataPricesFinalCompany
+    return averageRevenueCompany
+    
+###############################################################################################################################################################################
+
+def calculateAveragePricesCompany(dataPricesFinalCompany, companyPrices):
+    dataPricesBeforeNa = dataPricesFinalCompany[[companyPrices]]
+    dataPricesAfterNa = dataPricesBeforeNa.dropna()
+    dataPricesFinalCompany = dataPricesAfterNa[companyPrices].mean()
+    return dataPricesFinalCompany
+    
+###############################################################################################################################################################################
+
+def calculateAverageProfitsCompany(dataProfitsFinalCompany, companyProfit):  
+    dataProfitsBeforeNa = dataProfitsFinalCompany[[companyProfit]]
+    dataProfitsAfterNa = dataProfitsBeforeNa.dropna()
+    dataProfitsFinalCompany = dataProfitsAfterNa[companyProfit].mean()
+    return dataProfitsFinalCompany
+    
+###############################################################################################################################################################################
+
+def selectSales(excelReadWeek, companySales1, companySales2, product):
+    dataSalesSchelp = excelReadWeek[['Product', companySales1]]
+    dataSalesCp = excelReadWeek[['Product', companySales2]]
+    dataSalesFinalSchelp = dataSalesSchelp[dataSalesSchelp.Product == product]       
+    dataSalesFinalCp = dataSalesCp[dataSalesCp.Product == product]
+    return dataSalesFinalCp, dataSalesFinalSchelp
+    
+###############################################################################################################################################################################
+
+def calculateNumberOfOilBarrels(averageFuelSales):
+    numberOfBarrels = averageFuelSales / 159
+    return numberOfBarrels
+    
+###############################################################################################################################################################################
+
+def calculateAverageSales(dataSalesFinal,companySales):
+    dataSalesBeforeNa = dataSalesFinal[[companySales]]        
+    dataSalesAfterNa = dataSalesBeforeNa.dropna()        
+    dataSalesFinal = dataSalesAfterNa[companySales].mean()
+    return dataSalesFinal
+    
+###############################################################################################################################################################################
+
+(PART D)
+
+###############################################################################################################################################################################
+
+#Pandas tools is used read the data from the excel file. We set a few string variables, for which the product string variable can take strings:  𝐸𝑢𝑟𝑜 ,  𝑆𝑢𝑝𝑒𝑟  and  𝐷𝑖𝑒𝑠𝑒𝑙 . 
+#The variables are used as arguments when the function  𝑐𝑎𝑙𝑐𝑢𝑙𝑎𝑡𝑒𝑣𝑎𝑙𝑢𝑒𝑠  is called. 
+#The Alpha's, Beta's and Gamma's are the coefficients for the demand fuction for the products. 
+#The alphaTotal, betaTotal and gammaTotal are the combined coefficients that are required to calculate the monopoly price and equilibrium price. The "1" indicates company  𝑆𝑐ℎ𝑒𝑙𝑝  and the "2" indicates company  𝐶𝑃 . 
+#Notice that the values for the Alpha's, Beta's and Gamma's change depending on the product of interest, which have to be changed manually.
+
+
+def main():
+    fn = '/Users/markv/Downloads/pyhton/Cartel_data-3.xlsx'
+    excelRead = pd.read_excel(fn)
+   
+    alpha1 = 1.497e+05
+    beta1 = 13057.22
+    gamma1 = 62177.22
+    
+    alpha2 = 1.469e+05
+    beta2 = 12560.13
+    gamma2 = 59810.13
+    
+    alphaTotal = (alpha1 + alpha2)
+    betaTotal = (beta1 + beta2)
+    gammaTotal = (gamma1 + gamma2)
+    
+    company1 = 'Schelp' 
+    company2 = 'CP'
+    product = 'Super'
+    companySales1 = 'Sales_Schelp'
+    companySales2 = 'Sales_CP'
+    companyPrices1 = 'Price_Schelp'
+    companyPrices2 = 'Price_CP'
+    companyProfit1 = 'Profit_Schelp'
+    companyProfit2 = 'Profit_CP'
+    calculateValues(excelRead, companySales1, companySales2, product, company1, company2, alpha1, beta1, gamma1, alpha2, beta2, gamma2, alphaTotal, betaTotal, gammaTotal, companyProfit1, companyProfit2, companyPrices1, companyPrices2)    
+main()    
+
