@@ -1,0 +1,227 @@
+import numpy as np
+import pandas as pd
+from scipy import stats
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression as LR
+import statsmodels.api as sm
+import seaborn as sns
+import pylab as py
+import sys
+
+###############################################################################################################################################################################
+
+(PART A) 
+
+###############################################################################################################################################################################
+
+#We import the raw, unfiltered CSV data file
+
+def importdata():
+    fn = '/Users/markv/Downloads/pyhton/Cartel_data-3.xlsx'
+    data = pd.read_excel(fn)
+    return data
+
+###############################################################################################################################################################################
+
+#We can selecte the relevant data we need (local, company, oil price and oil sales)
+
+def main():
+    ProgramLocation = 'Yes'
+    location = 'Hollands Kroon'
+    company1 = 'CP'
+    company2 = 'CP'
+    companyPrice = f'Price_{company1}'
+    companySales = f'Sales_{company2}'
+    product = 'Diesel'
+    data = importdata()
+    
+    if ProgramLocation == 'Yes':
+        try:
+            selectstatisticsLocation(data, companyPrice, companySales, product, company1, company2, location)
+            compareCompanies(data, product, company1, company2)
+        
+        except Exception as e:
+            print("There is no price data for this region, please enter another region")
+            
+    
+    if ProgramLocation == 'No':
+        selectstatisticsNoLocation(data, companyPrice, companySales, product, company1, company2)
+        compareCompanies(data, product, company1, company2)
+        
+###############################################################################################################################################################################      
+ 
+#This function compares the sales, for any given product (𝐸𝑢𝑟𝑜, 𝑆𝑢𝑝𝑒𝑟 or 𝐷𝑖𝑒𝑠𝑒𝑙), of both the companies, 𝑆𝑐ℎ𝑒𝑙𝑝 and 𝐶𝑃.
+        
+def compareCompanies(data, product, company1, company2):
+    SalesData = data[['Sales_CP', 'Product', 'Sales_Schelp']]
+    SalesDataNew = SalesData[SalesData.Product == product]
+    SalesDataFinal = SalesDataNew[['Sales_CP', 'Sales_Schelp']]
+    SalesDataGraphData = SalesDataFinal.dropna()
+    print(SalesDataGraphData)
+    SalesOneVector = SalesDataGraphData['Sales_CP'].values.reshape(-1,1)
+    SalesTwoVector = SalesDataGraphData['Sales_Schelp'].values.reshape(-1,1)
+    print(SalesDataGraphData['Sales_CP'].corr(SalesDataGraphData['Sales_Schelp']))
+    plotCompareCompaniesSales(SalesOneVector, SalesTwoVector, product, company1, company2)        
+        
+###############################################################################################################################################################################       
+
+#This functions plots the Sales of  𝑆𝑐ℎ𝑒𝑙𝑝  and  𝐶𝑃  for the chosen product. The sales for company 1 will be projected along the x-axis.
+
+def plotCompareCompaniesSales(SalesOneVector, SalesTwoVector, product, company1, company2):    
+    plt.scatter(SalesOneVector, SalesTwoVector, label = 'Diesel Sales', alpha = 0.5)
+    plt.title(f'{product} Sales ({company1}) Against {product} Sales ({company2})')
+    plt.xlabel(f'Sales Of {product} {company1}')
+    plt.ylabel(f'Sales Of {product} {company2}')
+    plt.legend()
+    plt.show()   
+
+###############################################################################################################################################################################
+ 
+ #This function determines the linear regression model (when location is needed) for the given input and calculates the corresponding coefficient and intercept. 
+ #The coefficient and intercept are also printed.
+ 
+ def calculatestatisticsLocation(CompanyDataProductRelevant, companyPrice, companySales, product, company1, company2, location):
+    PriceVector = CompanyDataProductRelevant[companyPrice].values.reshape(-1,1)
+    SalesVector = CompanyDataProductRelevant[companySales].values.reshape(-1,1)
+    LinearRegression = LR().fit(PriceVector, SalesVector)
+    SalesPrediction = LinearRegression.predict(PriceVector)
+    print('The value of the linear regression coefficient: %f' %LinearRegression.coef_)
+    print('The value of the linear regression intercept: %f' %LinearRegression.intercept_)
+    ols(PriceVector, SalesVector, product,company1)
+    plotPriceAgainstSalesLocation(PriceVector, SalesVector, SalesPrediction, product, company1, company2, location)
+ 
+ ###############################################################################################################################################################################
+
+#This function determines the linear regression model (when no location is needed) for the given input and calculates the corresponding coefficient and intercept.
+#The coefficient and intercept are also printed.
+
+def calculatestatisticsNoLocation(CompanyDataProductRelevant, companyPrice, companySales, product, company1, company2):
+    PriceVector = CompanyDataProductRelevant[companyPrice].values.reshape(-1,1)
+    SalesVector = CompanyDataProductRelevant[companySales].values.reshape(-1,1)
+    LinearRegression = LR().fit(PriceVector, SalesVector)
+    SalesPrediction = LinearRegression.predict(PriceVector)
+    print('The value of the linear regression coefficient: %f' %LinearRegression.coef_)
+    print('The value of the linear regression intercept: %f' %LinearRegression.intercept_)
+    ols(PriceVector, SalesVector, product,company1)
+    plotPriceAgainstSalesNoLocation(PriceVector, SalesVector, SalesPrediction, product, company1, company2)
+
+
+###############################################################################################################################################################################
+
+#This function uses a tool which can be used to calculate several statistics about a linear regression model.
+#We use it to determine a best linear unbiased estimator of  𝛽𝑜  and  𝛽1 .
+
+def ols(pv, sv, product, company1):
+    PriceVectorConstant = sm.add_constant(pv)
+    modelOLS = sm.OLS(sv, PriceVectorConstant)
+    resultsOLS = modelOLS.fit()
+    PredictedSales = resultsOLS.predict(PriceVectorConstant)
+    print(resultsOLS.summary())
+   
+    residuals = resultsOLS.resid
+    sm.qqplot(residuals,fit=True, line='45')
+    plt.title(f"Q-Q-Plot of {product} for {company1}")
+    plt.show()
+    
+    plt.hist(residuals, edgecolor='w', linewidth=0.5, bins = 10, density=True)
+    sns.kdeplot(residuals)
+    plt.ylabel('Relative Frequency')
+    plt.xlabel('Residuals')
+    plt.title(f"Distribution Of Residuals of {product} for {company1}")
+    plt.show()
+    
+    mean = residuals.mean()
+    std = residuals.std()
+    standardized = (residuals-mean)/std
+    
+    sns.set_theme(style="whitegrid")
+    sns.residplot(pv, standardized, lowess=True, color="g")
+    plt.title(f"Residual Plot of {product} for {company1}")
+    plt.ylabel('Standardized Residuals')
+    plt.xlabel(f'Price of {product} for {company1}')
+    plt.show() 
+    
+
+###############################################################################################################################################################################
+
+
+def plotPriceAgainstSalesLocation(pv, sv, dsp, product, company1, company2, location):
+    plt.scatter(pv, sv, label = 'Sales vs Price', alpha = 0.5)
+    plt.plot(pv, dsp, color = 'red', label = 'OLS Analysis')
+    plt.title(f'Price Of {product} Against {product} Sales For {company1} in {location}')
+    plt.xlabel(f'Price Of {product}')
+    plt.ylabel(f'Sales Of {product}')
+    plt.legend()
+    plt.show()
+    
+    plt.savefig('output.png', dpi=300)
+
+
+###############################################################################################################################################################################
+ 
+ #This function, used when no location is needed, selects a specific part of all data. 
+ #We are only interested in making a selection based on the product, the price and sales of the product. 
+ #The function also prints an array that contains information about the price and sales of a company for one product.
+ 
+ 
+ def selectstatisticsNoLocation(data, companyPrice, companySales, product, company1, company2):
+    CompanyData = data[[companyPrice, companySales, 'Product']]
+    CompanyDataProduct = CompanyData[CompanyData.Product == product]
+    CompanyDataProductRelevant = CompanyDataProduct.dropna() 
+    print(CompanyDataProductRelevant)
+    calculatestatisticsNoLocation(CompanyDataProductRelevant, companyPrice, companySales, product, company1, company2)
+    
+###############################################################################################################################################################################
+  
+  #This function, used when a location is needed, selects a specific part of all data. 
+  #We are only interested in making a selection based on the product, the price and sales of the product. 
+  #The function also prints an array that contains information about the price and sales of a company for one product.
+  
+  
+  def selectstatisticsLocation(data, companyPrice, companySales, product, company1, company2, location):
+    CompanyData = data[['Municipality', companyPrice, companySales, 'Product']]
+    CompanyDataLocation = CompanyData[CompanyData.Municipality == location]
+    CompanyDataProduct = CompanyDataLocation[CompanyDataLocation.Product == product]
+    #CompanyDataProduct = CompanyData[CompanyData.Product == product]
+    CompanyDataProductRelevant = CompanyDataProduct.dropna() ##dropna is a tool that drops a data point if that point does not contain data
+    print(CompanyDataProductRelevant)
+    calculatestatisticsLocation(CompanyDataProductRelevant, companyPrice, companySales, product, company1, company2, location)
+  
+###############################################################################################################################################################################
+
+(PART B)
+
+###############################################################################################################################################################################
+
+#Notice that magic numbers do not have a fixed value. 
+#These values depend on the choice of the product and company. The values that need to be used can be found in the OLS summary table from PART A.
+
+def main():
+    # Magic Numbers
+    regressionBetaOneHatCoefficient = -6.388e+04
+    regressionBetaIntercept = 1.457e+05
+    betaGammaRatio = 0.18 
+    # Code
+    regression(regressionBetaOneHatCoefficient, regressionBetaIntercept, betaGammaRatio)
+    
+###########################################################
+### call main
+if __name__ == "__main__":
+    main()
+
+###############################################################################################################################################################################
+
+#This function uses the  𝛽̂ 1 ,  𝛽0 ,  𝛽𝛾  as input to calculate the adjusted Gamma, final Gamma Value and final Beta Value
+
+def regression(regressionBetaOneHatCoefficient, regressionBetaIntercept, betaGammaRatio):
+    adjustedGamma = betaGammaRatio - 1
+    finalGammaValue = regressionBetaOneHatCoefficient / adjustedGamma
+    finalBetaValue = finalGammaValue * betaGammaRatio
+    print('The value of Gamma: %f' %finalGammaValue)
+    print('The value of Beta: %f' %finalBetaValue)
+    
+###############################################################################################################################################################################
+
+(PART C)
+
+###############################################################################################################################################################################
